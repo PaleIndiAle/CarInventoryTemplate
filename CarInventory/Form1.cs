@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace CarInventory
 {
@@ -16,6 +17,8 @@ namespace CarInventory
         public Form1()
         {
             InitializeComponent();
+            outputLabel.Text = "";
+            loadDB();
         }
 
         private void addButton_Click(object sender, EventArgs e)
@@ -51,6 +54,60 @@ namespace CarInventory
                     cars.RemoveAt(i);
                 }
             }
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            saveDB();
+        }
+
+        public void loadDB()
+        {
+            XmlReader reader = XmlReader.Create("carData.xml", null);
+
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Text)
+                {
+                    string year = reader.ReadString();
+
+                    reader.ReadToNextSibling("make");
+                    string make = reader.ReadString();
+
+                    reader.ReadToNextSibling("colour");
+                    string colour = reader.ReadString();
+
+                    reader.ReadToNextSibling("mileage");
+                    string mileage = reader.ReadString();
+
+                    Car newCar = new Car(year, make, colour, mileage);
+                    cars.Add(newCar);
+                }
+            }
+
+            reader.Close();
+        }
+
+        public void saveDB()
+        {
+            XmlWriter writer = XmlWriter.Create("carData.xml", null);
+
+            writer.WriteStartElement("Car");
+
+            foreach (Car c in cars)
+            {
+                writer.WriteStartElement("Car");
+
+                writer.WriteElementString("year", c.year);
+                writer.WriteElementString("make", c.make);
+                writer.WriteElementString("colour", c.colour);
+                writer.WriteElementString("mileage", c.mileage);
+
+                writer.WriteEndElement();
+            }
+
+            writer.WriteEndElement();
+            writer.Close();
         }
     }
 }
